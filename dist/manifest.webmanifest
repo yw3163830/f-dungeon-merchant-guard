@@ -1,0 +1,13 @@
+{
+  "name": "F级地下城商人：守城佣兵版",
+  "short_name": "地下城商人",
+  "description": "经营商店、雇佣佣兵并守住城墙。",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#151b35",
+  "theme_color": "#151b35",
+  "lang": "zh-CN",
+  "icons": [
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

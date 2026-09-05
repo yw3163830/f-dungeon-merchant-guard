@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F级地下城商人：守城佣兵版</title>
+<meta name="theme-color" content="#151b35">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="地下城商人">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon.svg">
+<style>
+/* ===== 像素风基础 ===== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-dark: #1a1a2e;
+  --bg-panel: #16213e;
+  --bg-panel2: #0f3460;
+  --accent: #e94560;
+  --accent2: #f39c12;
+  --text: #eaeaea;
+  --text-dim: #a0a0a0;
+  --border: #2d3561;
+  --green: #27ae60;
+  --red: #c0392b;
+  --gold: #f1c40f;
+}
+
+body {
+  background: var(--bg-dark);
+  color: var(--text);
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+}
+
+/* 像素边框 */
+.pixel-border {
+  border: 3px solid var(--border);
+  box-shadow: 
+    inset 0 0 0 2px var(--bg-panel2),
+    4px 4px 0 rgba(0,0,0,0.3);
+}
+
+/* ===== 游戏容器 ===== */
+#game-container {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ===== 标题 ===== */
+#game-title {
+  text-align: center;
+  padding: 15px;
+  background: var(--bg-panel);
+  pixel-border: 3px solid var(--border);
+}
+#game-title h1 {
+  font-size: 24px;
+  color: var(--accent2);
+  text-shadow: 2px 2px 0 var(--bg-dark);
+  letter-spacing: 2px;
+}
+#game-title .subtitle {
+  color: var(--text-dim);
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+/* ===== 状态栏 ===== */
+#status-bar {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 15px;
+  background: var(--bg-panel);
+  pixel-border: 3px solid var(--border);
+}
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.status-item .icon { font-size: 16px; }
+.status-item .value { color: var(--accent2); font-weight: bold; }
+
+/* ===== 主区域 ===== */
+#main-area {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  min-height: 400px;
+}
+
+/* ===== 日志面板 ===== */
+#log-panel {
+  flex: 2;
+  background: var(--bg-panel);
+  pixel-border: 3px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#log-header {
+  padding: 8px 12px;
+  background: var(--bg-panel2);
+  border-bottom: 2px solid var(--border);
+  font-weight: bold;
+  color: var(--accent2);
+}
+#log-content {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  max-height: 500px;
+}
+#log-content .log-entry {
+  margin-bottom: 8px;
+  padding: 4px 0;
+  border-bottom: 1px dashed rgba(255,255,255,0.05);
+}
+#log-content .log-entry.highlight {
+  color: var(--accent2);
+  font-weight: bold;
+}
+#log-content .log-entry.success { color: var(--green); }
+#log-content .log-entry.danger { color: var(--red); }
+#log-content .log-entry.gold { color: var(--gold); }
+#log-content .log-entry.info { color: #3498db; }
+#log-content .log-entry.dim { color: var(--text-dim); }
+#log-content .log-entry.story { color: #d7bde2; border-left: 3px solid #9b59b6; padding-left: 8px; }
+.meter { display:inline-block; width:120px; height:10px; background:#0b1225; border:1px solid var(--border); vertical-align:middle; margin-left:6px; }
+.meter > span { display:block; height:100%; background:var(--green); }
+
+/* ===== 操作面板 ===== */
+#action-panel {
+  flex: 1;
+  min-width: 200px;
+  background: var(--bg-panel);
+  pixel-border: 3px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+#action-header {
+  padding: 8px 12px;
+  background: var(--bg-panel2);
+  border-bottom: 2px solid var(--border);
+  font-weight: bold;
+  color: var(--accent);
+}
+#action-buttons {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+/* ===== 按钮 ===== */
+.btn {
+  padding: 10px 14px;
+  background: var(--bg-panel2);
+  color: var(--text);
+  border: 2px solid var(--border);
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  text-align: left;
+  transition: all 0.1s;
+  position: relative;
+}
+.btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.btn:disabled:hover {
+  background: var(--bg-panel2);
+  color: var(--text);
+  border-color: var(--border);
+}
+.btn.primary { border-left: 4px solid var(--accent); }
+.btn.success { border-left: 4px solid var(--green); }
+.btn.gold { border-left: 4px solid var(--gold); }
+.btn.danger { border-left: 4px solid var(--red); }
+
+/* ===== 物品卡片 ===== */
+.item-card {
+  background: var(--bg-panel2);
+  border: 2px solid var(--border);
+  padding: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+.item-card:hover {
+  border-color: var(--accent);
+}
+.item-card.selected {
+  border-color: var(--accent2);
+  background: rgba(243, 156, 18, 0.1);
+}
+.item-card .item-name {
+  font-weight: bold;
+  color: var(--accent2);
+}
+.item-card .item-quality {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.item-card .item-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+.item-card .item-price {
+  font-size: 12px;
+  color: var(--gold);
+  margin-top: 4px;
+}
+
+/* ===== 弹窗 ===== */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+.modal {
+  background: var(--bg-panel);
+  border: 3px solid var(--border);
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.modal-header {
+  padding: 12px 16px;
+  background: var(--bg-panel2);
+  border-bottom: 2px solid var(--border);
+  font-weight: bold;
+  color: var(--accent2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 20px;
+  cursor: pointer;
+}
+.modal-body {
+  padding: 16px;
+}
+.modal-footer {
+  padding: 12px 16px;
+  border-top: 2px solid var(--border);
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* ===== 鉴定动画 ===== */
+@keyframes appraise-flash {
+  0% { background: var(--bg-panel2); }
+  50% { background: rgba(233, 69, 96, 0.3); }
+  100% { background: var(--bg-panel2); }
+}
+.appraise-anim {
+  animation: appraise-flash 0.5s ease-in-out 3;
+}
+
+/* ===== 滚动条 ===== */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-panel); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ===== 响应式 ===== */
+@media (max-width: 700px) {
+  #main-area { flex-direction: column; }
+  #action-panel { min-width: auto; }
+  #log-content { max-height: 350px; }
+}
+
+/* ===== 宝箱闪动画 ===== */
+@keyframes treasure-glow {
+  0%, 100% { box-shadow: 0 0 5px var(--gold); }
+  50% { box-shadow: 0 0 20px var(--gold), 0 0 40px var(--accent2); }
+}
+.treasure-glow {
+  animation: treasure-glow 1s ease-in-out infinite;
+}
+
+/* ===== 守城佣兵版视觉升级 ===== */
+body { background: radial-gradient(circle at 15% 0%, #253867 0, #151b35 42%, #0b1021 100%); font-family: "Noto Sans SC", "Microsoft YaHei", "Courier New", sans-serif; padding: 20px; }
+#game-container { max-width: 1240px; gap: 14px; }
+#game-title { position:relative; overflow:hidden; padding:23px 20px; background:linear-gradient(135deg, #202b52, #121a36 65%); border-color:#5c6ea5; }
+#game-title:after { content:"⚜"; position:absolute; right:28px; top:-17px; font-size:88px; color:rgba(241,196,15,.12); }
+#game-title h1 { font-size:30px; letter-spacing:3px; }
+#game-title .subtitle { position:relative; color:#bdc8e8; font-size:13px; }
+#status-bar { display:grid; grid-template-columns:repeat(7, minmax(105px,1fr)); background:rgba(21,31,61,.92); border-color:#536695; gap:7px; padding:8px; }
+.status-item { min-height:48px; justify-content:center; flex-wrap:wrap; align-content:center; padding:4px; border:1px solid rgba(130,150,205,.2); background:rgba(7,13,32,.35); border-radius:4px; font-size:12px; }
+.status-item .value { font-size:15px; }
+#main-area { min-height:500px; gap:14px; }
+#log-panel { flex:1.55; background:rgba(18,29,57,.94); border-color:#536695; }
+#action-panel { flex:.8; min-width:230px; background:rgba(18,29,57,.94); border-color:#536695; }
+#roster-panel { flex:.92; min-width:245px; background:rgba(18,29,57,.94); border-color:#536695; overflow:hidden; }
+.panel-title { padding:10px 12px; background:linear-gradient(90deg,#263b71,#192848); color:#f6cf5a; border-bottom:2px solid #536695; font-weight:bold; }
+#roster-summary { padding:10px 12px; color:#b7c4e6; font-size:12px; border-bottom:1px solid rgba(130,150,205,.2); }
+#roster-list { padding:8px; max-height:410px; overflow-y:auto; }
+.merc-card { position:relative; padding:10px; margin-bottom:8px; background:linear-gradient(135deg,rgba(42,58,105,.72),rgba(18,27,55,.82)); border:1px solid #44598f; border-left:4px solid #7fb3d5; border-radius:4px; }
+.merc-card.sr { border-left-color:#aa7de7; }.merc-card.ssr { border-left-color:#f5b041; }.merc-card.ur { border-left-color:#ef6174; box-shadow:0 0 14px rgba(233,69,96,.24); }
+.merc-top { display:flex; justify-content:space-between; gap:6px; align-items:center; font-size:12px; }.merc-name { color:#f5d56d; font-weight:bold; }.merc-rank { font-size:10px; padding:1px 5px; border:1px solid currentColor; border-radius:10px; }.merc-type { display:inline-block; margin-top:5px; padding:1px 6px; color:#c8d4f3; background:#263a6e; border-radius:9px; font-size:10px; }.merc-desc { margin-top:5px; color:#aebbdc; font-size:11px; line-height:1.45; }
+.empty-roster { padding:25px 10px; text-align:center; color:#8f9aba; font-size:12px; }
+#log-header, #action-header { background:linear-gradient(90deg,#263b71,#192848); border-color:#536695; }
+#log-content { padding:16px; }
+#log-content .log-entry { border-bottom-color:rgba(130,150,205,.14); padding:7px 0; }
+.btn { background:linear-gradient(135deg,#253968,#1b2b53); border-color:#415689; border-radius:4px; padding:11px 12px; font-family:inherit; font-size:12px; box-shadow:0 2px 0 rgba(0,0,0,.25); }.btn:hover { transform:translateY(-1px); background:linear-gradient(135deg,#e94560,#c5314b); }
+.btn.primary { border-left-color:#5bc0de; }.btn.success { border-left-color:#57d58a; }.btn.gold { border-left-color:#f5cf51; }
+.hero-card { padding:14px; margin-bottom:10px; border:1px solid #4c6197; border-radius:5px; background:linear-gradient(135deg,rgba(42,58,105,.9),rgba(17,24,51,.95)); }.hero-card h3 { color:#f6cf5a; margin-bottom:6px; }.hero-card .statline { color:#bdcaeb; font-size:12px; margin:5px 0; }.type-chip { display:inline-block; padding:2px 7px; border-radius:10px; background:#334d88; color:#e5ecff; font-size:11px; margin-right:5px; }.type-chip.combat { background:#753749; }.type-chip.work { background:#236553; }.type-chip.support { background:#59417d; }
+@media (max-width:1000px) { #status-bar { grid-template-columns:repeat(4,1fr); } #main-area { flex-wrap:wrap; } #roster-panel { flex:1; min-width:260px; } }
+@media (max-width:700px) { body{padding:8px} #status-bar{grid-template-columns:repeat(3,1fr)} #main-area{flex-direction:column} #roster-panel{width:100%} }
+</style>
+</head>
+<body>
+
+<div id="game-container">
+  <!-- 标题 -->
+  <div id="game-title" class="pixel-border">
+    <h1>⚔️ F级地下城商人 🏪</h1>
+    <div class="subtitle">用5G收的垃圾，卖了5000G —— 这就是商人的嗅觉</div>
+  </div>
+
+  <!-- 状态栏 -->
+  <div id="status-bar" class="pixel-border">
+    <div class="status-item"><span class="icon">📅</span>第 <span class="value" id="st-day">1</span> 天</div>
+    <div class="status-item"><span class="icon">💰</span><span class="value" id="st-gold">100</span>G</div>
+    <div class="status-item"><span class="icon">⭐</span>信誉 <span class="value" id="st-rep">0</span></div>
+    <div class="status-item"><span class="icon">🏪</span><span class="value" id="st-shop">F级</span></div>
+    <div class="status-item"><span class="icon">📦</span><span class="value" id="st-inv">0</span>/<span id="st-max">20</span></div>
+    <div class="status-item"><span class="icon">🛡️</span>城墙 <span class="value" id="st-wall">100</span></div>
+    <div class="status-item"><span class="icon">🧑‍🤝‍🧑</span>佣兵 <span class="value" id="st-mercs">0</span></div>
+    <div class="status-item"><span class="icon">🕐</span><span class="value" id="st-phase">早晨</span></div>
+  </div>
+
+  <!-- 主区域 -->
+  <div id="main-area">
+    <!-- 日志面板 -->
+    <div id="log-panel" class="pixel-border">
+      <div id="log-header">📜 冒险日志</div>
+      <div id="log-content"></div>
+    </div>
+
+    <!-- 操作面板 -->
+    <div id="action-panel" class="pixel-border">
+      <div id="action-header">🎮 操作</div>
+      <div id="action-buttons"></div>
+    </div>
+
+    <aside id="roster-panel" class="pixel-border">
+      <div class="panel-title">🧑‍🤝‍🧑 佣兵战术面板</div>
+      <div id="roster-summary">尚未雇佣佣兵</div>
+      <div id="roster-list"></div>
+    </aside>
+  </div>
+</div>
+
+<script>
+// ========================================
+// 《F级地下城商人》网页版
+// ========================================
+
+// ===== 物品数据库 =====
+const ITEMS = {
+  // F级 — 史莱姆洞窟
+  "F001": { id:"F001", name:"生锈的短剑", quality:"破旧", desc:"一把生锈的铁剑，剑刃缺口", trueName:"英雄之剑·封印态", trueQuality:"A", category:"武器", buy:5, sell:5000, effect:"解封后攻击力+80，对魔族伤害+50%", lore:"三百年前勇者用的圣剑，被魔王诅咒封印。史莱姆把它当巢穴装饰。", contrast:"trash_to_treasure", difficulty:3 },
+  "F002": { id:"F002", name:"发霉的面包", quality:"破旧", desc:"长绿毛的面包，散发酸腐味", trueName:"精灵长老的永生面包", trueQuality:"S", category:"消耗品", buy:1, sell:20000, effect:"永久+10生命上限，青春永驻", lore:"精灵族长老为爱人烤制的面包，注入了永生魔法。", contrast:"trash_to_treasure", difficulty:4 },
+  "F003": { id:"F003", name:"普通的石头", quality:"破旧", desc:"路边随处可见的灰色石头", trueName:"龙血石", trueQuality:"B", category:"材料", buy:0, sell:800, effect:"锻造材料，可为武器附加火属性", lore:"幼龙蜕皮时滴落的血液渗入岩石形成。", contrast:"trash_to_treasure", difficulty:2 },
+  "F004": { id:"F004", name:"破损的布娃娃", quality:"破旧", desc:"缺了一只眼睛的布娃娃，棉花漏出", trueName:"守护灵偶·沉睡", trueQuality:"C", category:"饰品", buy:3, sell:600, effect:"夜间自动警戒，感知隐形敌人", lore:"古代女巫为保护女儿制作的守护灵，因诅咒沉睡。", contrast:"trash_to_treasure", difficulty:3 },
+  "F005": { id:"F005", name:"黏糊糊的项链", quality:"破旧", desc:"被史莱姆黏液覆盖的金属链", trueName:"海妖之泪", trueQuality:"B", category:"饰品", buy:2, sell:1200, effect:"水下呼吸，游泳速度+50%", lore:"深海海妖为殉情恋人流下的眼泪结晶。", contrast:"trash_to_treasure", difficulty:2 },
+  "F006": { id:"F006", name:"闪亮的玻璃珠", quality:"华丽", desc:"拳头大小的透明珠子，闪闪发光", trueName:"普通玻璃珠", trueQuality:"F", category:"杂物", buy:10, sell:5, effect:"无", lore:"哥布林从人类集市偷来的装饰品。它们以为这是龙蛋。", contrast:"fancy_to_trash", difficulty:1 },
+  "F007": { id:"F007", name:"完美的蘑菇", quality:"精致", desc:"形状完美、颜色鲜艳的红色蘑菇", trueName:"剧毒红伞菇", trueQuality:"E", category:"消耗品", buy:5, sell:30, effect:"立即中毒，每秒-5HP", lore:"史莱姆洞窟的特产，人类吃了见祖先。", contrast:"cute_to_deadly", difficulty:1 },
+  "F008": { id:"F008", name:"破旧的地图", quality:"破旧", desc:"泛黄的羊皮纸，墨迹模糊", trueName:"通往S级地下城的秘道图", trueQuality:"S", category:"书籍", buy:3, sell:50000, effect:"解锁隐藏地图天空神殿近路", lore:"老探险家毕生心血。他死在F级地下城是因为——地图拿反了。", contrast:"trash_to_treasure", difficulty:5 },
+  "F009": { id:"F009", name:"生锈的钥匙", quality:"破旧", desc:"老旧的铜钥匙，齿已经磨平", trueName:"古王国国库备用钥匙", trueQuality:"A", category:"杂物", buy:2, sell:4000, effect:"开启隐藏房间被遗忘的金库", lore:"古王国覆灭时国库管理员带走的。他死在F级地下城是因为——走错路了。", contrast:"trash_to_treasure", difficulty:4 },
+  "F010": { id:"F010", name:"普通的树叶", quality:"破旧", desc:"一片枯黄的树叶", trueName:"世界树之叶", trueQuality:"S", category:"材料", buy:0, sell:15000, effect:"可制作复活药水", lore:"从世界树顶端飘落的一片叶子，被史莱姆当成了帽子。", contrast:"trash_to_treasure", difficulty:5 },
+  "F014": { id:"F014", name:"生锈的钥匙", quality:"破旧", desc:"老旧的铜钥匙", trueName:"古王国国库备用钥匙", trueQuality:"A", category:"杂物", buy:2, sell:4000, effect:"开启隐藏房间", lore:"古王国覆灭时带走的备用钥匙", contrast:"trash_to_treasure", difficulty:4 },
+  "F016": { id:"F016", name:"空药瓶", quality:"破旧", desc:"洗干净的玻璃瓶，瓶底有红色残留", trueName:"龙血残留瓶", trueQuality:"C", category:"材料", buy:1, sell:300, effect:"炼金材料，制作龙血合剂", lore:"曾盛放过真正的龙血。虽然只剩一滴，但那一滴值三百金。", contrast:"trash_to_treasure", difficulty:2 },
+  "F017": { id:"F017", name:"破损的指南针", quality:"破旧", desc:"指针疯狂旋转，玻璃面有裂纹", trueName:"指向宝藏的罗盘", trueQuality:"B", category:"饰品", buy:5, sell:1000, effect:"在地下城中随机指向隐藏宝箱", lore:"寻宝猎人的遗物。它总是指向宝藏，但不告诉你路上有什么。", contrast:"trash_to_treasure", difficulty:3 },
+  "F019": { id:"F019", name:"枯萎的花朵", quality:"破旧", desc:"完全干枯的花瓣，一碰就碎", trueName:"时停之花", trueQuality:"A", category:"材料", buy:1, sell:3500, effect:"可制作时间停止药水（3秒）", lore:"生长在时间裂缝边缘的花朵，被采摘后核心仍冻结在绽放瞬间。", contrast:"trash_to_treasure", difficulty:4 },
+  "F020": { id:"F020", name:"漏水的皮袋", quality:"破旧", desc:"底部破洞的皮袋", trueName:"次元储物袋·破损", trueQuality:"C", category:"杂物", buy:4, sell:800, effect:"可修复（500G），修复后库存上限+50", lore:"次元法师的实验品，次元裂缝导致漏水。", contrast:"trash_to_treasure", difficulty:3 },
+
+  // E级
+  "E001": { id:"E001", name:"血染的匕首", quality:"破旧", desc:"刀刃上凝固着黑褐色血迹", trueName:"吸血鬼始祖之牙", trueQuality:"A", category:"武器", buy:15, sell:6000, effect:"20%概率吸血（恢复30%伤害）", lore:"始祖脱落的一颗牙磨成的匕首。哥布林觉得很酷。", contrast:"horror_to_treasure", difficulty:4 },
+  "E002": { id:"E002", name:"粗糙的矿石", quality:"普通", desc:"灰白色的普通矿石", trueName:"秘银原矿", trueQuality:"B", category:"材料", buy:10, sell:1500, effect:"冶炼后获得秘银锭", lore:"哥布林从矿洞深处挖出来的。它们以为是普通石头，用来垫桌脚。", contrast:"normal_to_secret", difficulty:2 },
+  "E003": { id:"E003", name:"华丽的宝石", quality:"华丽", desc:"闪闪发光的巨大红宝石", trueName:"恶魔之眼（诅咒道具）", trueQuality:"curse", category:"诅咒", buy:100, sell:-500, effect:"每日损失1%资金，但魅力+50", lore:"被恶魔附身的宝石。它会慢慢吸干你的财富。", contrast:"fancy_to_deadly", difficulty:3 },
+  "E004": { id:"E004", name:"会笑的木偶", quality:"普通", desc:"木头小丑木偶，嘴角上扬", trueName:"诅咒笑匠·被封印", trueQuality:"curse", category:"诅咒", buy:8, sell:-200, effect:"每日随机吓跑一位顾客，但每晚自动讲笑话", lore:"古代宫廷笑匠的灵魂被封印。他讲了一千年笑话，已经疯了。", contrast:"cute_to_deadly", difficulty:3 },
+  "E005": { id:"E005", name:"烧焦的卷轴", quality:"破旧", desc:"边缘烧焦、字迹模糊", trueName:"禁咒·流星火雨（残卷）", trueQuality:"S", category:"消耗品", buy:10, sell:30000, effect:"释放不完整流星火雨（可能烧到自己）", lore:"大魔导师的绝笔。写下时被刺客偷袭，卷轴被烛火烧掉一半。", contrast:"trash_to_treasure", difficulty:5 },
+  "E011": { id:"E011", name:"漂亮的海螺壳", quality:"精致", desc:"五彩斑斓的海螺壳", trueName:"海妖号角", trueQuality:"B", category:"饰品", buy:15, sell:1800, effect:"召唤一次海浪攻击（仅限靠近水源）", lore:"深海海妖呼唤同族的号角。被一只迷路的螃蟹带到了哥布林营地。", contrast:"normal_to_secret", difficulty:3 },
+
+  // D级
+  "D001": { id:"D001", name:"腐朽的铠甲", quality:"破旧", desc:"长满铁锈和青苔的全身铠甲", trueName:"亡灵骑士·不灭甲", trueQuality:"A", category:"防具", buy:25, sell:7000, effect:"致命伤害保留1HP（每日一次），夜间自动修复", lore:"千年前护国骑士的铠甲。主人死后，铠甲产生了自我意识。", contrast:"trash_to_treasure", difficulty:4 },
+  "D002": { id:"D002", name:"发黄的情书", quality:"破旧", desc:"纸张泛黄、字迹模糊，落款是永远爱你的J", trueName:"死灵法师的誓约书", trueQuality:"S", category:"书籍", buy:2, sell:18000, effect:"学会技能亡灵召唤（召唤骷髅战士1小时）", lore:"死灵法师写给亡妻的情书。把自己的灵魂碎片封在字里行间。", contrast:"trash_to_treasure", difficulty:5 },
+  "D005": { id:"D005", name:"刻满名字的石板", quality:"普通", desc:"墓碑碎片，上面刻着十几个名字", trueName:"英灵碑·残片", trueQuality:"A", category:"材料", buy:8, sell:5000, effect:"攻击时5%概率召唤英灵协助（10秒）", lore:"记载着无名英雄的墓碑。他们的名字被遗忘，但意志残留。", contrast:"normal_to_secret", difficulty:4 },
+  "D007": { id:"D007", name:"生锈的锁链", quality:"破旧", desc:"缠绕暗黑气息的铁链，触碰感到寒冷", trueName:"束缚恶魔的锁链", trueQuality:"A", category:"武器", buy:20, sell:6000, effect:"15%概率束缚敌人3秒，对恶魔伤害+40%", lore:"曾囚禁一只大恶魔的锁链。恶魔逃脱后，锁链吸收了它的魔力。", contrast:"trash_to_treasure", difficulty:4 },
+  "D010": { id:"D010", name:"发霉的乐谱", quality:"破旧", desc:"长满霉斑的羊皮纸乐谱", trueName:"《安魂曲·终章》", trueQuality:"A", category:"书籍", buy:5, sell:5500, effect:"范围内亡灵平静化，对人类恢复少量HP", lore:"千年前最后一位宫廷乐师为亡灵大军谱写的安魂曲。", contrast:"trash_to_treasure", difficulty:4 },
+
+  // C级
+  "C001": { id:"C001", name:"掉落的鳞片", quality:"普通", desc:"巴掌大小的黑色鳞片，边缘锋利", trueName:"远古黑龙的逆鳞", trueQuality:"S", category:"材料", buy:30, sell:35000, effect:"制作龙鳞甲，物理防御+50%，火免疫", lore:"远古黑龙喉咙下方的逆鳞。拔下来等于宣战，但这片是自然脱落的。", contrast:"normal_to_secret", difficulty:5 },
+  "C006": { id:"C006", name:"会呼吸的石头", quality:"普通", desc:"拳头大小，摸起来温热，仿佛在呼吸", trueName:"龙心石", trueQuality:"A", category:"材料", buy:40, sell:6000, effect:"HP恢复速度+200%，免疫恐惧", lore:"龙族心脏停止跳动后凝结的石头。它记得活着时的温度。", contrast:"normal_to_secret", difficulty:4 },
+  "C010": { id:"C010", name:"会发光的洞穴水晶", quality:"精致", desc:"散发着温暖橙光的水晶", trueName:"龙族记忆水晶", trueQuality:"A", category:"饰品", buy:50, sell:7000, effect:"随机获得龙族知识（情报/古语/笑话）", lore:"龙族储存记忆的水晶。这片里存着幼龙第一次喷火的场景。", contrast:"normal_to_secret", difficulty:4 },
+
+  // B级
+  "B001": { id:"B001", name:"枯萎的藤蔓", quality:"破旧", desc:"干枯发黑的藤蔓，一碰就碎", trueName:"世界树须根", trueQuality:"S", category:"材料", buy:10, sell:22000, effect:"制作世界树汁液，全属性+5（永久，限一次）", lore:"世界树伸入地下的一根须根。精灵族找了它三百年。", contrast:"trash_to_treasure", difficulty:5 },
+  "B002": { id:"B002", name:"空白的画卷", quality:"普通", desc:"一卷空白羊皮纸，展开后什么都没有", trueName:"记忆画卷", trueQuality:"S", category:"书籍", buy:15, sell:25000, effect:"将记忆封入画卷（可重温）或释放他人记忆", lore:"精灵族保存记忆的魔法画卷。空白是因为上一任主人的记忆被释放了。", contrast:"normal_to_secret", difficulty:5 },
+  "B007": { id:"B007", name:"生锈的箭矢", quality:"破旧", desc:"箭羽脱落、箭头生锈的木箭", trueName:"月神之箭", trueQuality:"A", category:"武器", buy:12, sell:5500, effect:"夜间伤害翻倍，对亡灵必定暴击，白天伤害-50%", lore:"月神神庙守卫者用的箭。被射出后飞了三天，落到这里。", contrast:"trash_to_treasure", difficulty:4 },
+
+  // A级
+  "A001": { id:"A001", name:"碎裂的魔剑", quality:"破旧", desc:"剑身碎成三截的黑色长剑", trueName:"魔王小指·剑形态", trueQuality:"S", category:"武器", buy:80, sell:50000, effect:"组装后（5000G）攻击力+150，每次攻击消耗5%HP", lore:"魔王被勇者斩下的小指化成的剑。它一直想回到魔王身上。", contrast:"trash_to_treasure", difficulty:5 },
+  "A006": { id:"A006", name:"破碎的传送门碎片", quality:"普通", desc:"边缘发光的石头碎片，触碰有空间扭曲感", trueName:"界门碎片", trueQuality:"S", category:"材料", buy:100, sell:40000, effect:"开启随机传送（宝藏房或BOSS房）或制作回城卷轴", lore:"连接人界和魔界的门碎裂后的碎片。拿着它能听到门另一边的声音。", contrast:"normal_to_secret", difficulty:5 },
+  "A010": { id:"A010", name:"巨大的独角", quality:"普通", desc:"弯曲的黑色独角，表面有天然魔纹", trueName:"魔神之角·幼年期", trueQuality:"S", category:"材料", buy:120, sell:45000, effect:"制作魔神武器系列，附带随机强力魔族技能", lore:"幼年魔神换角时脱落的。魔神本人可能还在找它——不是因为重要，是因为痒痒。", contrast:"normal_to_secret", difficulty:5 },
+
+  // S级
+  "S001": { id:"S001", name:"掉落的羽毛", quality:"普通", desc:"一片纯白的羽毛，没有杂质，轻若无物", trueName:"创世神的笔", trueQuality:"SSS", category:"材料", buy:50, sell:100000, effect:"在任何物品上书写，所写内容会成为现实（限三个字）", lore:"创世神书写世界规则的笔脱落的羽毛。它掉落后，创世神改用键盘了。", contrast:"normal_to_secret", difficulty:5 },
+  "S008": { id:"S008", name:"空白的神谕", quality:"普通", desc:"完全空白的羊皮纸，注视时感到被注视", trueName:"未来之页", trueQuality:"SSS", category:"书籍", buy:70, sell:80000, effect:"每日浮现一条明日提示（准确度90%，措辞含糊）", lore:"命运之神写给自己的备忘录。他写完后发现看不太懂——因为那是明天的语言。", contrast:"normal_to_secret", difficulty:5 },
+
+  // 诅咒
+  "X001": { id:"X001", name:"会增值的欠债单", quality:"普通", desc:"一张写着欠款100G的纸条", trueName:"复利诅咒契约", trueQuality:"curse", category:"诅咒", buy:10, sell:-5000, effect:"每日债务增加10%，直到还清", lore:"贪婪商人签下的契约。他死后契约还在增值。", contrast:"normal_to_deadly", difficulty:3 },
+  "X003": { id:"X003", name:"永远满的酒杯", quality:"精致", desc:"永远盛满红色液体的银杯", trueName:"血杯·永恒", trueQuality:"curse", category:"诅咒", buy:50, sell:-2000, effect:"每日产出血色佳酿（500G），但每日需献祭10G", lore:"永生吸血鬼的酒杯。它永远有酒，但酒是上一任主人的血。", contrast:"fancy_to_deadly", difficulty:4 },
+};
+
+// 垃圾物品池
+const JUNK_ITEMS = [
+  { name:"史莱姆黏液", quality:"破旧", desc:"一滩绿色的黏液，闻起来像过期果冻", buy:0, sell:1 },
+  { name:"断裂的木棍", quality:"破旧", desc:"一根断成两截的木棍", buy:1, sell:3 },
+  { name:"破布条", quality:"破旧", desc:"不知道原本是什么的布条", buy:0, sell:1 },
+  { name:"生锈的铁钉", quality:"破旧", desc:"长度不够用来钉任何东西", buy:0, sell:2 },
+  { name:"空药瓶", quality:"破旧", desc:"洗干净的玻璃瓶，曾经装过什么已不可考", buy:1, sell:2 },
+  { name:"碎石头", quality:"破旧", desc:"一块没什么特别的碎石头", buy:0, sell:1 },
+  { name:"烂果皮", quality:"破旧", desc:"已经腐烂的水果皮", buy:0, sell:1 },
+];
+
+// 顾客类型
+const CUSTOMERS = {
+  novice: { name:"新手冒险者", title:"菜鸟", buyPower:0.3, appraisal:0.1, haggle:0.2, patience:3, prefer:["F","E"], color:"#7fb3d5" },
+  experienced: { name:"老练冒险者", title:"老手", buyPower:1.0, appraisal:0.6, haggle:0.7, patience:5, prefer:["D","C","B"], color:"#a2d9ce" },
+  noble: { name:"贵族收藏家", title:"贵族", buyPower:3.0, appraisal:0.9, haggle:0.3, patience:2, prefer:["A","S","SSS"], color:"#f9e79f" },
+};
+
+// 店铺等级配置
+const SHOP_LEVELS = {
+  F: { name:"路边破帐篷", next:"E", cost:500, shelf:6, inv:20, dailyCost:5 },
+  E: { name:"小木屋", next:"D", cost:2000, shelf:8, inv:30, dailyCost:10 },
+  D: { name:"石屋商店", next:"C", cost:10000, shelf:10, inv:40, dailyCost:20 },
+  C: { name:"气派商行", next:"B", cost:50000, shelf:12, inv:60, dailyCost:50 },
+  B: { name:"贸易行会", next:"A", cost:200000, shelf:15, inv:80, dailyCost:100 },
+  A: { name:"传奇商会", next:"S", cost:1000000, shelf:20, inv:120, dailyCost:200 },
+  S: { name:"商业帝国", next:"", cost:0, shelf:30, inv:200, dailyCost:500 },
+};
+
+// 鉴定层数
+const APPRAISAL_LAYERS = [
+  { name:"浅层鉴定", cost:10, accuracy:0.55, desc:"看个大概，可能看错" },
+  { name:"中层鉴定", cost:30, accuracy:0.75, desc:"知道有没有特效" },
+  { name:"深层鉴定", cost:80, accuracy:0.90, desc:"知道具体效果" },
+  { name:"完全鉴定", cost:200, accuracy:1.0, desc:"100%准确" },
+];
+
+// ===== 雇佣所：佣兵平时留店工作，警报响起时会全员登城 =====
+const MERCENARY_POOL = [
+  { id:"mira", name:"米拉·银舌", rank:"R", type:"work", typeLabel:"工作系·销售", role:"店员", trait:"金舌", desc:"每日店务 +8G；守城时为队伍助阵。", battle:12, shop:8, wall:0 },
+  { id:"bram", name:"布拉姆", rank:"R", type:"work", typeLabel:"工作系·锻造", role:"铁匠", trait:"补墙匠", desc:"每日修复 6 点城墙；可投入前线。", battle:18, shop:0, wall:6 },
+  { id:"tessa", name:"苔莎", rank:"R", type:"work", typeLabel:"工作系·后勤", role:"采购员", trait:"精打细算", desc:"每日店务 +11G；战力较低。", battle:9, shop:11, wall:0 },
+  { id:"nora", name:"诺菈", rank:"SR", type:"support", typeLabel:"辅助系·侦察", role:"斥候", trait:"先见", desc:"预警敌情；守城战力 +28。", battle:28, shop:3, wall:0 },
+  { id:"cass", name:"卡斯", rank:"SR", type:"combat", typeLabel:"战斗系·远程", role:"弩手", trait:"鹰眼", desc:"箭塔战术额外 +12 战力。", battle:35, shop:2, wall:0 },
+  { id:"elise", name:"伊莉丝", rank:"SR", type:"support", typeLabel:"辅助系·医疗", role:"药师", trait:"战地急救", desc:"战败时额外保住 12 点城墙。", battle:22, shop:6, wall:0 },
+  { id:"garr", name:"加尔", rank:"SSR", type:"combat", typeLabel:"战斗系·防御", role:"盾卫", trait:"不退之墙", desc:"守城战力 +52，城墙承伤 -15%。", battle:52, shop:0, wall:2 },
+  { id:"sera", name:"瑟拉", rank:"SSR", type:"support", typeLabel:"辅助系·指挥", role:"前宫廷侍卫", trait:"王室旧誓", desc:"知道你的身世；守城胜利额外信誉 +2。", battle:46, shop:7, wall:0 },
+  { id:"rowan", name:"罗文", rank:"SSR", type:"combat", typeLabel:"战斗系·突击", role:"流亡骑士", trait:"反冲锋", desc:"对叛军与邻国军团额外 +25 战力。", battle:48, shop:2, wall:0 },
+  { id:"aurelia", name:"奥蕾莉亚", rank:"UR", type:"combat", typeLabel:"战斗系·王家秘卫", role:"王家秘卫", trait:"血脉共鸣", desc:"王室真相揭露后，全员守城战力 +20%。", battle:65, shop:10, wall:4 },
+];
+
+const SIEGE_EVENTS = [
+  { name:"灰牙兽潮", type:"兽潮", strength:58, text:"北方森林的灰牙狼群被魔气驱赶，正朝城门奔来。" },
+  { name:"赤旗叛军", type:"叛乱", strength:92, text:"举着赤旗的叛军包围了外城。他们宣称王室血脉早已断绝。" },
+  { name:"伊莱恩边军", type:"邻国", strength:128, text:"邻国借口追捕逃犯越过边境，攻城车却对准了你的城墙。" },
+  { name:"王都秘卫", type:"王室", strength:168, text:"王都秘卫抵达：他们不是来救城，而是来确认你是否还活着。" },
+];
+
+// ===== 游戏状态 =====
+let state = {
+  day: 1,
+  gold: 100,
+  reputation: 0,
+  shopLevel: "F",
+  phase: "morning", // morning, morning_open, noon, afternoon, evening
+  inventory: [],
+  shelf: [],
+  today: { revenue:0, expenses:0, customers:0, sales:0 },
+  dungeonCooldown: 0,
+  totalDays: 0,
+  mercenaries: [],
+  recruitTokens: 2,
+  recruitPity: 0,
+  defense: { wall:100, maxWall:100, nextDay:5, cycle:0, lastSettledDay:0, royalTruth:false },
+};
+
+// 手机端本地存档：只保存在当前设备，不上传任何游戏数据。
+const SAVE_KEY = "f_dungeon_merchant_guard_v1";
+let gameBooted = false;
+function saveGame() {
+  if (gameBooted) localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+}
+function restoreGame() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
+    if (!saved || typeof saved !== "object") return false;
+    state = { ...state, ...saved, defense: { ...state.defense, ...(saved.defense || {}) } };
+    return true;
+  } catch (_) { return false; }
+}
+
+// 当前选中的物品索引（用于弹窗）
+let selectedItemIdx = -1;
+let currentCustomer = null;
+
+// ===== 工具函数 =====
+function rand(n) { return Math.floor(Math.random() * n); }
+function randf() { return Math.random(); }
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+function pick(arr) { return arr[rand(arr.length)]; }
+
+// ===== 日志系统 =====
+function log(text, type="") {
+  const content = document.getElementById("log-content");
+  const entry = document.createElement("div");
+  entry.className = "log-entry" + (type ? " " + type : "");
+  entry.innerHTML = text;
+  content.appendChild(entry);
+  content.scrollTop = content.scrollHeight;
+}
+function clearLog() {
+  document.getElementById("log-content").innerHTML = "";
+}
+
+// ===== 状态更新 =====
+function updateStatus() {
+  const cfg = SHOP_LEVELS[state.shopLevel];
+  document.getElementById("st-day").textContent = state.day;
+  document.getElementById("st-gold").textContent = state.gold;
+  document.getElementById("st-rep").textContent = state.reputation;
+  document.getElementById("st-shop").textContent = state.shopLevel + "级";
+  document.getElementById("st-inv").textContent = state.inventory.length;
+  document.getElementById("st-max").textContent = cfg.inv;
+  document.getElementById("st-wall").textContent = state.defense.wall + "/" + state.defense.maxWall;
+  document.getElementById("st-mercs").textContent = state.mercenaries.length;
+
+  const phaseNames = {
+    morning: "早晨准备", morning_open: "上午营业",
+    noon: "午休", afternoon: "下午营业", evening: "打烊", defense: "城防警报"
+  };
+  document.getElementById("st-phase").textContent = phaseNames[state.phase] || state.phase;
+  renderRosterPanel();
+  saveGame();
+}
+
+// ===== 按钮渲染 =====
+function renderButtons(buttons) {
+  const container = document.getElementById("action-buttons");
+  container.innerHTML = "";
+  buttons.forEach(b => {
+    const btn = document.createElement("button");
+    btn.className = "btn " + (b.type || "");
+    btn.textContent = b.text;
+    btn.disabled = b.disabled || false;
+    btn.onclick = b.action;
+    container.appendChild(btn);
+  });
+}
+
+// ===== 物品生成 =====
+function generateItem(dungeonLevel) {
+  // 40%概率出真实物品
+  if (randf() < 0.4) {
+    const keys = Object.keys(ITEMS);
+    // 按地下城等级过滤
+    let candidates = keys;
+    if (dungeonLevel === "F") {
+      candidates = keys.filter(k => k.startsWith("F"));
+    } else if (dungeonLevel === "E") {
+      candidates = keys.filter(k => k.startsWith("E") || k.startsWith("F"));
+    } else if (dungeonLevel === "D") {
+      candidates = keys.filter(k => k.startsWith("D") || k.startsWith("E") || k.startsWith("F"));
+    }
+    if (candidates.length === 0) candidates = keys;
+    const key = pick(candidates);
+    const item = ITEMS[key];
+    return {
+      ...item,
+      key: key,
+      acquiredPrice: 0,
+      isAppraised: false,
+      listedPrice: 0,
+    };
+  }
+  // 60%概率出垃圾
+  const junk = pick(JUNK_ITEMS);
+  return {
+    key: "JUNK_" + rand(9999),
+    name: junk.name,
+    quality: junk.quality,
+    desc: junk.desc,
+    trueName: junk.name,
+    trueQuality: "F",
+    category: "杂物",
+    buy: junk.buy,
+    sell: junk.sell,
+    effect: "无",
+    lore: "普通的地下城垃圾。",
+    contrast: "trash_to_trash",
+    difficulty: 1,
+    acquiredPrice: 0,
+    isAppraised: false,
+    listedPrice: 0,
+  };
+}
+
+function rankColor(rank) {
+  return ({R:"#7fb3d5", SR:"#9b59b6", SSR:"#f5b041", UR:"#e74c3c"})[rank] || "#fff";
+}
+
+function typeIcon(type) {
+  return ({combat:"⚔️", work:"🏪", support:"✦"})[type] || "🧑";
+}
+
+function renderRosterPanel() {
+  const list = document.getElementById("roster-list");
+  const summary = document.getElementById("roster-summary");
+  if (!list || !summary) return;
+  const counts = { combat:0, work:0, support:0 };
+  state.mercenaries.forEach(m => counts[m.type] = (counts[m.type] || 0) + 1);
+  const power = state.mercenaries.reduce((sum, m) => sum + m.battle, 0);
+  summary.innerHTML = `总战力 <b style="color:#f5cf51">${power}</b>　战斗 ${counts.combat}｜工作 ${counts.work}｜辅助 ${counts.support}<br><span style="color:#8f9aba">驻店时自动工作，警报时全员登城</span>`;
+  if (!state.mercenaries.length) {
+    list.innerHTML = '<div class="empty-roster">尚未雇佣佣兵<br>用佣兵契约寻找你的第一位伙伴。</div>';
+    return;
+  }
+  list.innerHTML = state.mercenaries.map(m => `
+    <div class="merc-card ${m.rank.toLowerCase()}">
+      <div class="merc-top"><span class="merc-name">${typeIcon(m.type)} ${m.name}</span><span class="merc-rank" style="color:${rankColor(m.rank)}">${m.rank}</span></div>
+      <span class="merc-type">${m.typeLabel}</span>
+      <div class="merc-desc"><b>${m.trait}</b> · 战力 ${m.battle}<br>${m.desc}</div>
+    </div>`).join("");
+}
+
+function showMercenaryHall() {
+  clearLog();
+  log("<b>🎴 城门雇佣所</b>", "highlight");
+  log(`佣兵契约：${state.recruitTokens} 张 ｜ 单次雇佣：80G ｜ ${10 - state.recruitPity} 次内必得 SSR 以上`);
+  log("佣兵白天自动经营店铺，城防警报响起时全员参战。重复雇佣会折算为 35G 安置金。");
+  log("");
+  if (!state.mercenaries.length) log("目前无人应募。城里的流言说，城主正在寻找一位‘不该存在的王子’。", "story");
+  state.mercenaries.forEach(m => {
+    log(`<div class="hero-card"><h3><span style="color:${rankColor(m.rank)}">[${m.rank}]</span> ${typeIcon(m.type)} ${m.name}</h3><span class="type-chip ${m.type}">${m.typeLabel}</span><span class="type-chip">${m.role}</span><div class="statline"><b>${m.trait}</b> · 守城战力 ${m.battle}</div><div class="statline">${m.desc}</div></div>`);
+  });
+  renderButtons([
+    { text: state.recruitTokens ? "🎴 使用佣兵契约" : "💰 花 80G 雇佣一次", action: recruitMercenary, type:"gold", disabled: !state.recruitTokens && state.gold < 80 },
+    { text:"🛡️ 查看城防情报", action:showDefenseIntel, type:"primary" },
+    { text:"🔙 返回", action:showMainMenu }
+  ]);
+}
+
+function recruitMercenary() {
+  if (state.recruitTokens > 0) state.recruitTokens--;
+  else {
+    if (state.gold < 80) return showMercenaryHall();
+    state.gold -= 80;
+    state.today.expenses += 80;
+  }
+  let rank;
+  if (state.recruitPity >= 9) rank = randf() < 0.08 ? "UR" : "SSR";
+  else {
+    const roll = randf();
+    rank = roll < .62 ? "R" : roll < .88 ? "SR" : roll < .985 ? "SSR" : "UR";
+  }
+  state.recruitPity = (rank === "SSR" || rank === "UR") ? 0 : state.recruitPity + 1;
+  const pool = MERCENARY_POOL.filter(m => m.rank === rank);
+  const recruit = pick(pool);
+  clearLog();
+  log("<b>✦ 契约在夜色中燃烧…</b>", "highlight");
+  log(`<span style="color:${rankColor(recruit.rank)};font-size:18px"><b>[${recruit.rank}] ${recruit.name}</b></span>`);
+  log(`${recruit.role}｜特质：<b>${recruit.trait}</b>`);
+  log(recruit.desc, "info");
+  if (state.mercenaries.some(m => m.id === recruit.id)) {
+    state.gold += 35;
+    log("这位佣兵已经在你的队伍中，留下 35G 安置金后离开。", "gold");
+  } else {
+    state.mercenaries.push({...recruit});
+    log(`🤝 ${recruit.name} 加入了店铺与城防队。`, "success");
+    if (recruit.id === "sera") log("瑟拉压低声音：‘殿下，终于找到您了。先别问——城墙外有人在等答案。’", "story");
+  }
+  updateStatus();
+  renderButtons([
+    { text:"🎴 再雇佣一次", action:recruitMercenary, type:"gold", disabled: !state.recruitTokens && state.gold < 80 },
+    { text:"🧑‍🤝‍🧑 查看队伍", action:showMercenaryHall, type:"primary" },
+    { text:"🔙 返回", action:showMainMenu }
+  ]);
+}
+
+function currentSiege() {
+  return SIEGE_EVENTS[Math.min(state.defense.cycle, SIEGE_EVENTS.length - 1)];
+}
+
+function showDefenseIntel() {
+  clearLog();
+  const event = currentSiege();
+  const days = Math.max(0, state.defense.nextDay - state.day);
+  log("<b>🛡️ 城防情报</b>", "highlight");
+  log(`城墙完整度：${state.defense.wall}/${state.defense.maxWall} <span class="meter"><span style="width:${state.defense.wall / state.defense.maxWall * 100}%"></span></span>`);
+  log(`下一次攻城：第 ${state.defense.nextDay} 天（还有 ${days} 天）`);
+  log(`预估敌军：<b>${event.name}</b>｜威胁 ${event.strength}`, "danger");
+  log(event.text, "dim");
+  const teamPower = state.mercenaries.reduce((sum, m) => sum + m.battle, 0);
+  log(`守城队：${state.mercenaries.length} 人｜佣兵战力 ${teamPower}｜信誉援军 +${state.reputation * 2}`, "info");
+  const tactics = [];
+  if (state.mercenaries.some(m => m.id === "nora")) tactics.push("诺菈：敌军威胁 -6、我方 +8");
+  if (state.mercenaries.some(m => m.id === "cass")) tactics.push("卡斯：箭塔齐射额外 +12");
+  if (state.mercenaries.some(m => m.id === "garr")) tactics.push("加尔：城墙承伤 -15%");
+  if (state.mercenaries.some(m => m.id === "sera")) tactics.push("瑟拉：胜利信誉额外 +2");
+  if (tactics.length) log(`小队联动：${tactics.join("｜")}`, "gold");
+  log("提示：铁匠会在每日结算时修墙；守城胜利可获得资金、信誉与契约。", "dim");
+  renderButtons([{ text:"🎴 前往雇佣所", action:showMercenaryHall, type:"gold" }, { text:"🔙 返回", action:showMainMenu }]);
+}
+
+function showDefenseBriefing() {
+  clearLog();
+  const event = currentSiege();
+  log("<b>🚨 城防警报！</b>", "danger");
+  log(`${event.name} 来袭｜敌军威胁：<b>${event.strength}</b>`);
+  log(event.text);
+  log(`城墙：${state.defense.wall}/${state.defense.maxWall}｜应战佣兵：${state.mercenaries.length} 人`, "info");
+  if (!state.defense.royalTruth && state.defense.cycle >= 2) {
+    state.defense.royalTruth = true;
+    log("一枚刻着狮鹫的旧印从你的行囊滑落。瑟拉单膝跪下：‘您是先王未被承认的孩子，也是他们最害怕的继承人。’", "story");
+  }
+  log("选择战术：所有已雇佣的佣兵都会参战，平时的店铺特质不会失效。", "dim");
+  renderButtons([
+    { text:"⚔️ 亲自守门（均衡）", action:() => resolveDefense("gate"), type:"primary" },
+    { text:"🏹 箭塔齐射（+20 战力）", action:() => resolveDefense("tower"), type:"success" },
+    { text:"💰 悬赏援军（-50G，+45 战力）", action:() => resolveDefense("aid"), type:"gold", disabled:state.gold < 50 }
+  ]);
+}
+
+function resolveDefense(tactic) {
+  const event = currentSiege();
+  let team = state.mercenaries.reduce((sum, m) => sum + m.battle, 0);
+  const hasScout = state.mercenaries.some(m => m.id === "nora");
+  const hasArcher = state.mercenaries.some(m => m.id === "cass");
+  const hasCommander = state.mercenaries.some(m => m.id === "sera");
+  if (state.mercenaries.some(m => m.id === "rowan") && (event.type === "叛乱" || event.type === "邻国")) team += 25;
+  if (state.defense.royalTruth && state.mercenaries.some(m => m.id === "aurelia")) team += 20 * state.mercenaries.length;
+  if (hasScout) team += 8;
+  const tacticPower = tactic === "tower" ? 20 + (hasArcher ? 12 : 0) : tactic === "aid" ? 45 : 10;
+  if (tactic === "aid") { state.gold -= 50; state.today.expenses += 50; }
+  const defensePower = Math.floor(state.defense.wall * .24 + team + state.reputation * 2 + tacticPower + rand(21));
+  const enemyPower = event.strength + rand(21) - (hasScout ? 6 : 0);
+  const win = defensePower >= enemyPower;
+  const hasShield = state.mercenaries.some(m => m.id === "garr");
+  const hasHealer = state.mercenaries.some(m => m.id === "elise");
+  const damage = Math.max(4, Math.floor((enemyPower - (win ? defensePower * .45 : defensePower * .12)) / 3) + 10 - (hasShield ? 5 : 0) - (hasHealer && !win ? 12 : 0));
+  state.defense.wall = clamp(state.defense.wall - damage, 0, state.defense.maxWall);
+  clearLog();
+  log("<b>⚔️ 守城战报</b>", "highlight");
+  log(`我方战力 ${defensePower} vs 敌军 ${enemyPower}`);
+  if (win) {
+    const reward = 70 + state.defense.cycle * 45;
+    const repGain = 2 + (hasCommander ? 2 : 0);
+    state.gold += reward; state.reputation += repGain; state.recruitTokens++;
+    log(`🏆 守住了！城民赠予 ${reward}G，信誉 +${repGain}，并送来 1 张佣兵契约。`, "success");
+    if (state.defense.cycle === 0) log("狼群退去后，城门下留下半枚王家徽章。有人在逼你承认血脉。", "story");
+  } else {
+    const loss = Math.min(state.gold, 25 + state.defense.cycle * 15);
+    state.gold -= loss; state.reputation = Math.max(0, state.reputation - 1);
+    log(`⚠️ 城门失守一角。损失 ${loss}G，信誉 -1，但你们仍守住了内城。`, "danger");
+  }
+  log(`城墙损伤 ${damage} 点，剩余 ${state.defense.wall}/${state.defense.maxWall}。`, state.defense.wall < 35 ? "danger" : "info");
+  state.defense.cycle++; state.defense.nextDay += 5; state.phase = "morning";
+  updateStatus();
+  renderButtons([{ text:"🌅 处理店铺事务", action:showMainMenu, type:"success" }]);
+}
+
+// ===== 主菜单 =====
+function showMainMenu() {
+  updateStatus();
+  clearLog();
+
+  const phaseText = {
+    morning: "🌅 早晨准备",
+    morning_open: "🏪 上午营业中",
+    noon: "☕ 午休时间",
+    afternoon: "🏪 下午营业中",
+    evening: "🌙 打烊结算"
+  };
+
+  log(`<b>${phaseText[state.phase]}</b>`, "highlight");
+
+  const buttons = [];
+
+  switch(state.phase) {
+    case "morning":
+      log("今天又是新的一天。整理一下货架，准备营业吧。");
+      log("");
+      buttons.push(
+        { text: "📦 查看库存", action: showInventory, type: "primary" },
+        { text: "🏪 整理货架", action: showShelf, type: "primary" },
+        { text: "🤝 从冒险者收购", action: showBuyFromAdventurer, type: "gold" },
+        { text: "🎴 雇佣所（" + state.recruitTokens + " 张契约）", action: showMercenaryHall, type: "gold" },
+        { text: "🛡️ 城防情报", action: showDefenseIntel, type: "primary" },
+        { text: "🚪 开始上午营业 →", action: () => { state.phase = "morning_open"; showMainMenu(); }, type: "success" }
+      );
+      break;
+
+    case "morning_open":
+      log("顾客正在陆续进店...");
+      log("");
+      buttons.push(
+        { text: "👤 接待下一位顾客", action: serveCustomer, type: "primary" },
+        { text: "📦 查看库存/货架", action: showInventory, type: "" },
+        { text: "🎴 雇佣所", action: showMercenaryHall, type: "gold" },
+        { text: "☕ 午休（去地下城）→", action: () => { state.phase = "noon"; showMainMenu(); }, type: "success" }
+      );
+      break;
+
+    case "noon":
+      log("午休时间。你可以去地下城拾荒，或者留在店里鉴定物品。");
+      log("");
+      const canScavenge = state.dungeonCooldown <= 0;
+      buttons.push(
+        { text: canScavenge ? "⚔️ 去地下城拾荒" : "⏳ 地下城冷却中(" + state.dungeonCooldown + "天)", action: goScavenge, type: canScavenge ? "primary" : "", disabled: !canScavenge },
+        { text: "🔍 鉴定物品", action: showAppraisal, type: "primary" },
+        { text: "📦 整理库存", action: showInventory, type: "" },
+        { text: "🎴 雇佣所", action: showMercenaryHall, type: "gold" },
+        { text: "🚪 开始下午营业 →", action: () => { state.phase = "afternoon"; showMainMenu(); }, type: "success" }
+      );
+      break;
+
+    case "afternoon":
+      log("下午的顾客质量更高...");
+      log("");
+      buttons.push(
+        { text: "👤 接待下一位顾客", action: serveCustomer, type: "primary" },
+        { text: "📦 查看库存/货架", action: showInventory, type: "" },
+        { text: "🛡️ 城防情报", action: showDefenseIntel, type: "primary" },
+        { text: "🌙 打烊结算 →", action: endDay, type: "success" }
+      );
+      break;
+
+    case "evening":
+      log("一天结束了。查看今天的收获吧。");
+      log("");
+      buttons.push(
+        { text: "📊 查看今日结算", action: showDaySummary, type: "primary" },
+        { text: "🎴 雇佣所", action: showMercenaryHall, type: "gold" },
+        { text: "📈 升级店铺", action: tryUpgrade, type: "gold" },
+        { text: "🌅 开始新的一天 →", action: startNewDay, type: "success" }
+      );
+      break;
+
+    case "defense":
+      showDefenseBriefing();
+      return;
+  }
+
+  renderButtons(buttons);
+}
+
+// ===== 查看库存 =====
+function showInventory() {
+  clearLog();
+  log("<b>📦 库存清单</b>", "highlight");
+  log(`当前: ${state.inventory.length}/${SHOP_LEVELS[state.shopLevel].inv} 件`);
+  log("");
+
+  if (state.inventory.length === 0) {
+    log("(空空如也...去地下城拾荒或者从冒险者手里收购些东西吧)");
+  } else {
+    state.inventory.forEach((item, i) => {
+      const onShelf = state.shelf.includes(i) ? " [🏪已上架]" : "";
+      const appraised = item.isAppraised ? " ✓" : " ?";
+      const qualityColor = item.isAppraised ? getQualityColor(item.trueQuality) : getQualityColor(item.quality);
+      log(`[${i}] <span style="color:${qualityColor}">${item.name}</span>${appraised}${onShelf}`);
+      if (item.isAppraised) {
+        log(`    → 真名: ${item.trueName} | 建议售价: ${item.listedPrice}G`, "gold");
+      }
+    });
+  }
+
+  renderButtons([
+    { text: "🏪 管理货架", action: showShelf },
+    { text: "🔍 鉴定物品", action: showAppraisal },
+    { text: "🔙 返回", action: showMainMenu }
+  ]);
+}
+
+function getQualityColor(q) {
+  const colors = { F:"#95a5a6", E:"#7fb3d5", D:"#a2d9ce", C:"#f9e79f", B:"#f5b041", A:"#e74c3c", S:"#9b59b6", SSS:"#f1c40f", curse:"#2c3e50" };
+  return colors[q] || "#fff";
+}
+
+// ===== 货架管理 =====
+function showShelf() {
+  clearLog();
+  log("<b>🏪 货架管理</b>", "highlight");
+  const cfg = SHOP_LEVELS[state.shopLevel];
+  log(`货架: ${state.shelf.length}/${cfg.shelf} 格`);
+  log("");
+
+  if (state.shelf.length === 0) {
+    log("(货架上什么都没有，顾客会空手而归)");
+  } else {
+    state.shelf.forEach((invIdx, shelfIdx) => {
+      const item = state.inventory[invIdx];
+      const name = item.isAppraised ? item.trueName : item.name;
+      const price = item.listedPrice || 0;
+      log(`[${shelfIdx}] ${name} — ${price}G`);
+    });
+  }
+
+  log("");
+  log("点击物品可以上架/下架:");
+
+  // 生成上架按钮列表
+  const itemButtons = [];
+  state.inventory.forEach((item, i) => {
+    const onShelf = state.shelf.includes(i);
+    itemButtons.push({
+      text: (onShelf ? "⬇️ " : "⬆️ ") + item.name + (item.isAppraised ? " → " + item.trueName : ""),
+      action: () => toggleShelf(i),
+      type: onShelf ? "danger" : "success"
+    });
+  });
+
+  renderButtons([
+    ...itemButtons,
+    { text: "🔙 返回", action: showMainMenu }
+  ]);
+}
+
+function toggleShelf(invIdx) {
+  const shelfIdx = state.shelf.indexOf(invIdx);
+  const cfg = SHOP_LEVELS[state.shopLevel];
+
+  if (shelfIdx >= 0) {
+    // 下架
+    state.shelf.splice(shelfIdx, 1);
+    log(`⬇️ 已下架: ${state.inventory[invIdx].name}`);
+  } else {
+    // 上架
+    if (state.shelf.length >= cfg.shelf) {
+      log("❌ 货架已满！", "danger");
+      return;
+    }
+    const item = state.inventory[invIdx];
+    if (!item.isAppraised) {
+      log("⚠️ 未鉴定的物品不建议上架（顾客可能发现你在坑他）");
+    }
+    // 自动定价
+    if (!item.listedPrice) {
+      item.listedPrice = item.isAppraised ? item.sell : Math.max(1, Math.floor(item.buy * 1.5));
+    }
+    state.shelf.push(invIdx);
+    log(`⬆️ 已上架: ${item.name} — ${item.listedPrice}G`);
+  }
+  updateStatus();
+}
+
+// ===== 从冒险者收购 =====
+function showBuyFromAdventurer() {
+  clearLog();
+  log("<b>🤝 冒险者上门卖货</b>", "highlight");
+  log("");
+
+  // 生成3个报价
+  const offers = [];
+  for (let i = 0; i < 3; i++) {
+    const item = generateItem(state.shopLevel);
+    const askPrice = Math.floor(item.buy * (1.2 + randf() * 1.5));
+    offers.push({ item, askPrice });
+  }
+
+  offers.forEach((offer, i) => {
+    log(`[${i+1}] ${offer.item.name} (${offer.item.quality})`);
+    log(`    冒险者要价: <b>${offer.askPrice}G</b>`);
+    log(`    "${offer.item.desc}"`);
+    log("");
+  });
+
+  renderButtons([
+    { text: `✅ 买 #1 (${offers[0].askPrice}G)`, action: () => buyItem(offers[0]), type: "primary" },
+    { text: `✅ 买 #2 (${offers[1].askPrice}G)`, action: () => buyItem(offers[1]), type: "primary" },
+    { text: `✅ 买 #3 (${offers[2].askPrice}G)`, action: () => buyItem(offers[2]), type: "primary" },
+    { text: "🔙 不买了", action: showMainMenu }
+  ]);
+}
+
+function buyItem(offer) {
+  if (state.gold < offer.askPrice) {
+    log("❌ 资金不足！", "danger");
+    return;
+  }
+  const cfg = SHOP_LEVELS[state.shopLevel];
+  if (state.inventory.length >= cfg.inv) {
+    log("❌ 库存满了！", "danger");
+    return;
+  }
+
+  state.gold -= offer.askPrice;
+  state.today.expenses += offer.askPrice;
+  offer.item.acquiredPrice = offer.askPrice;
+  state.inventory.push(offer.item);
+
+  log(`✅ 收购成功: ${offer.item.name} — ${offer.askPrice}G`, "success");
+  updateStatus();
+
+  // 返回收购界面
+  setTimeout(showBuyFromAdventurer, 300);
+}
+
+// ===== 鉴定系统 =====
+function showAppraisal() {
+  clearLog();
+  log("<b>🔍 鉴定物品</b>", "highlight");
+  log("选择要鉴定的物品:");
+  log("");
+
+  const unappraised = state.inventory.filter((item, i) => !item.isAppraised);
+
+  if (unappraised.length === 0) {
+    log("(所有物品都已鉴定)");
+    renderButtons([{ text: "🔙 返回", action: showMainMenu }]);
+    return;
+  }
+
+  const buttons = [];
+  state.inventory.forEach((item, i) => {
+    if (!item.isAppraised) {
+      buttons.push({
+        text: `[${i}] ${item.name} — 浅层10G / 中层30G / 深层80G / 完全200G`,
+        action: () => showAppraisalDetail(i),
+        type: "primary"
+      });
+    }
+  });
+  buttons.push({ text: "🔙 返回", action: showMainMenu });
+
+  renderButtons(buttons);
+}
+
+function showAppraisalDetail(invIdx) {
+  const item = state.inventory[invIdx];
+  clearLog();
+  log(`<b>🔍 鉴定: ${item.name}</b>`, "highlight");
+  log(`描述: ${item.desc}`);
+  log(`当前资金: ${state.gold}G`);
+  log("");
+
+  const buttons = APPRAISAL_LAYERS.map((layer, i) => ({
+    text: `${layer.name} — ${layer.cost}G (${layer.desc})`,
+    action: () => doAppraisal(invIdx, i),
+    type: state.gold >= layer.cost ? "primary" : "",
+    disabled: state.gold < layer.cost
+  }));
+  buttons.push({ text: "🔙 返回", action: showAppraisal });
+
+  renderButtons(buttons);
+}
+
+function doAppraisal(invIdx, layerIdx) {
+  const item = state.inventory[invIdx];
+  const layer = APPRAISAL_LAYERS[layerIdx];
+
+  if (state.gold < layer.cost) {
+    log("❌ 资金不足！", "danger");
+    return;
+  }
+
+  state.gold -= layer.cost;
+  state.today.expenses += layer.cost;
+
+  clearLog();
+  log(`<b>🔍 ${layer.name}中...</b>`, "highlight");
+  log(`花费: ${layer.cost}G`);
+  log("");
+
+  // 模拟鉴定过程
+  setTimeout(() => {
+    // 计算是否看错（准确度）
+    const roll = randf();
+    const success = roll <= layer.accuracy;
+
+    if (!success) {
+      // 看错：给一个随机的错误提示
+      const fakeQualities = ["F", "E", "D", "C"];
+      const fake = pick(fakeQualities);
+      log(`💡 品质暗示: <b>${fake}级</b>`, "info");
+      log("（你的鉴定之眼有些模糊...）", "dim");
+    } else {
+      // 看对
+      log(`💡 品质暗示: <b>${item.trueQuality}级</b>`, "info");
+
+      if (layerIdx >= 1) {
+        const hasEffect = item.effect !== "无";
+        log(`✨ 特殊效果: ${hasEffect ? "有" : "无"}`, hasEffect ? "success" : "dim");
+      }
+      if (layerIdx >= 2) {
+        log(`🔮 效果: ${item.effect}`, "info");
+      }
+      if (layerIdx >= 3) {
+        // 完全鉴定
+        log("");
+        log("<b>🎉 完全鉴定！！！</b>", "highlight");
+        log(`真名: <span style="color:${getQualityColor(item.trueQuality)};font-size:16px"><b>${item.trueName}</b></span>`);
+        log(`真实品质: <b>${item.trueQuality}级</b>`);
+        log(`效果: ${item.effect}`);
+        log(`"${item.lore}"`, "dim");
+        log("");
+
+        // 高价值提示
+        if (item.sell > 1000) {
+          log(`💰 建议售价: <b>${item.sell}G</b>`, "gold");
+          if (item.acquiredPrice > 0) {
+            const profit = item.sell - item.acquiredPrice;
+            log(`📈 潜在利润: ${profit}G (${Math.floor(profit/item.acquiredPrice*100)}%)`, "gold");
+          }
+        }
+
+        item.isAppraised = true;
+        item.listedPrice = item.sell;
+      }
+    }
+
+    updateStatus();
+    renderButtons([
+      { text: "🔍 继续鉴定其他", action: showAppraisal, type: "primary" },
+      { text: "🔙 返回主菜单", action: showMainMenu }
+    ]);
+  }, 600);
+}
+
+// ===== 地下城拾荒 =====
+function goScavenge() {
+  if (state.dungeonCooldown > 0) {
+    log(`⏳ 还需要 ${state.dungeonCooldown} 天恢复体力`, "danger");
+    return;
+  }
+
+  state.dungeonCooldown = 2;
+  clearLog();
+  log("<b>⚔️ 前往地下城...</b>", "highlight");
+  log("");
+
+  const rooms = rand(3) + 2; // 2-4个房间
+  let itemsFound = [];
+  let goldFound = 0;
+  let damage = 0;
+
+  log("你进入了F级地下城...");
+
+  for (let i = 0; i < rooms; i++) {
+    const roll = randf();
+    if (roll < 0.45) {
+      const item = generateItem("F");
+      itemsFound.push(item);
+      log(`在第${i+1}个房间，你发现了一件<b>${item.name}</b>`);
+    } else if (roll < 0.65) {
+      const g = rand(20) + 5;
+      goldFound += g;
+      log(`你在角落里找到了<b>${g}G</b>`, "gold");
+    } else if (roll < 0.85) {
+      const dmg = rand(10) + 5;
+      damage += dmg;
+      log(`你遭遇了一只怪物，受了<b>${dmg}点伤</b>`, "danger");
+    } else {
+      log("你发现了一些奇怪的痕迹...", "dim");
+    }
+  }
+
+  if (itemsFound.length === 0 && goldFound === 0 && damage === 0) {
+    log("你搜遍了每个房间，但什么也没找到。空手而归。", "dim");
+  } else {
+    log("你带着战利品离开了地下城。", "success");
+  }
+
+  log("");
+  if (itemsFound.length > 0) {
+    log(`<b>🎒 找到 ${itemsFound.length} 件物品:</b>`, "success");
+    itemsFound.forEach(item => {
+      state.inventory.push(item);
+      log(`  - ${item.name} (${item.quality})`);
+    });
+  }
+  if (goldFound > 0) {
+    state.gold += goldFound;
+    log(`<b>💰 找到金币: ${goldFound}G</b>`, "gold");
+  }
+  if (damage > 0) {
+    log(`💔 受伤: ${damage}点`, "danger");
+  }
+
+  updateStatus();
+  renderButtons([
+    { text: "🔍 鉴定新物品", action: showAppraisal, type: "primary" },
+    { text: "📦 查看库存", action: showInventory },
+    { text: "🔙 返回", action: showMainMenu }
+  ]);
+}
+
+// ===== 接待顾客 =====
+function serveCustomer() {
+  // 检查货架
+  if (state.shelf.length === 0) {
+    clearLog();
+    log("🏪 货架上空空如也...", "danger");
+    log("先上架一些商品再接待顾客吧。");
+    renderButtons([
+      { text: "🏪 整理货架", action: showShelf, type: "primary" },
+      { text: "🔙 返回", action: showMainMenu }
+    ]);
+    return;
+  }
+
+  // 生成顾客
+  const roll = randf();
+  let cType = "novice";
+  if (state.shopLevel === "F" || state.shopLevel === "E") {
+    if (roll < 0.8) cType = "novice";
+    else cType = "experienced";
+  } else if (state.shopLevel === "D" || state.shopLevel === "C") {
+    if (roll < 0.3) cType = "novice";
+    else if (roll < 0.8) cType = "experienced";
+    else cType = "noble";
+  } else {
+    if (roll < 0.2) cType = "novice";
+    else if (roll < 0.5) cType = "experienced";
+    else cType = "noble";
+  }
+
+  const customer = { ...CUSTOMERS[cType], type: cType };
+  currentCustomer = customer;
+  state.today.customers++;
+
+  clearLog();
+  log(`<b>🚪 一位顾客走进了店里！</b>`, "highlight");
+  log("");
+  log(`<span style="color:${customer.color}"><b>👤 ${customer.name}</b> [${customer.title}]</span>`);
+
+  // 顾客入场对话
+  const enterLines = [
+    `"老板，让我看看你有什么货。"`,
+    `"听说你这里有些特别的东西？"`,
+    `"我随便看看..."`,
+    `"有适合我的装备吗？"`,
+  ];
+  log(pick(enterLines), "dim");
+  log("");
+
+  // 显示货架让顾客选
+  log("顾客对以下商品感兴趣:");
+  const buttons = [];
+  state.shelf.forEach((invIdx, shelfIdx) => {
+    const item = state.inventory[invIdx];
+    const name = item.isAppraised ? item.trueName : item.name;
+    const price = item.listedPrice || Math.max(1, item.buy * 2);
+    buttons.push({
+      text: `[${shelfIdx}] ${name} — ${price}G`,
+      action: () => negotiateSale(shelfIdx, customer),
+      type: "primary"
+    });
+  });
+  buttons.push({ text: "👋 请顾客离开", action: showMainMenu });
+
+  renderButtons(buttons);
+}
+
+function negotiateSale(shelfIdx, customer) {
+  const invIdx = state.shelf[shelfIdx];
+  const item = state.inventory[invIdx];
+  const askingPrice = item.listedPrice || Math.max(1, item.buy * 2);
+
+  clearLog();
+  log(`<b>💬 与 ${customer.name} 的交易</b>`, "highlight");
+  log("");
+
+  // 顾客评估价格
+  const perceivedValue = item.isAppraised
+    ? item.sell * (0.5 + customer.appraisal * 0.5)
+    : item.buy * (1 + customer.appraisal * 2);
+
+  log(`你的要价: <b>${askingPrice}G</b>`);
+  log(`${customer.name}的心理价位: ~${Math.floor(perceivedValue)}G`);
+  log("");
+
+  // 成交判定
+  let sold = false;
+  let finalPrice = askingPrice;
+  let repChange = 0;
+
+  if (askingPrice <= perceivedValue * 1.5) {
+    // 价格合理或偏低，直接成交
+    sold = true;
+    if (askingPrice <= perceivedValue * 0.7) {
+      log(`💰 <b>成交！</b> ${customer.name}毫不犹豫地买下了。`, "success");
+      repChange = 1;
+    } else {
+      log(`💰 <b>成交！</b> ${customer.name}想了想，接受了价格。`, "success");
+    }
+  } else if (askingPrice <= perceivedValue * 2.5 && customer.patience > 0) {
+    // 可以尝试砍价
+    const haggleCount = Math.min(customer.patience, 3);
+    for (let i = 0; i < haggleCount; i++) {
+      const offer = Math.floor(askingPrice * (0.6 + randf() * 0.3));
+      log(`${customer.name}: "${offer}G，一口价。"`);
+      if (offer >= perceivedValue * 0.8) {
+        finalPrice = offer;
+        sold = true;
+        log(`💰 <b>成交！</b> 你接受了 ${offer}G。`, "success");
+        break;
+      } else {
+        log(`你摇了摇头。`);
+      }
+    }
+    if (!sold) {
+      log(`${customer.name}: "太贵了，我去别家看看。"`, "danger");
+    }
+  } else {
+    log(`${customer.name}皱了皱眉: "这是抢劫吗？"`, "danger");
+    log(`${customer.name}转身离开了。`);
+    repChange = -1;
+  }
+
+  if (sold) {
+    // 完成交易
+    state.gold += finalPrice;
+    state.today.revenue += finalPrice;
+    state.today.sales++;
+    state.reputation += repChange;
+
+    // 从货架和库存移除
+    state.shelf.splice(shelfIdx, 1);
+    state.inventory.splice(invIdx, 1);
+    // 修正货架索引
+    state.shelf = state.shelf.map(idx => idx > invIdx ? idx - 1 : idx);
+
+    log(`"${pick(["不错，下次还来。", "值这个价。", "好货色！"])}"`, "dim");
+    if (repChange > 0) log("⭐ 信誉 +1", "info");
+  }
+
+  updateStatus();
+  renderButtons([
+    { text: "👤 接待下一位", action: serveCustomer, type: "primary" },
+    { text: "🔙 返回", action: showMainMenu }
+  ]);
+}
+
+// ===== 打烊结算 =====
+function endDay() {
+  state.phase = "evening";
+  showMainMenu();
+}
+
+function showDaySummary() {
+  clearLog();
+  log("<b>📊 今日结算</b>", "highlight");
+  log("═══════════════════════════════");
+  log(`📅 第 ${state.day} 天`);
+  log(`💰 收入: <b>${state.today.revenue}G</b>`, "gold");
+  log(`💸 支出: <b>${state.today.expenses}G</b>`);
+  log(`📈 净利: <b>${state.today.revenue - state.today.expenses}G</b>`);
+  log(`👥 顾客: ${state.today.customers}人`);
+  log(`🤝 成交: ${state.today.sales}笔`);
+  log(`💵 结余: <b>${state.gold}G</b>`, "gold");
+  log(`⭐ 信誉: ${state.reputation}`);
+  log("═══════════════════════════════");
+
+  // 每日结算只能执行一次，避免重复点开结算反复扣费。
+  if (state.defense.lastSettledDay !== state.day) {
+    const cfg = SHOP_LEVELS[state.shopLevel];
+    const shopIncome = state.mercenaries.reduce((sum, m) => sum + m.shop, 0);
+    const wallRepair = state.mercenaries.reduce((sum, m) => sum + m.wall, 0);
+    state.gold -= cfg.dailyCost;
+    state.gold += shopIncome;
+    state.today.revenue += shopIncome;
+    state.defense.wall = clamp(state.defense.wall + wallRepair, 0, state.defense.maxWall);
+    state.defense.lastSettledDay = state.day;
+    log(`🏪 ${cfg.name} 维护费: -${cfg.dailyCost}G`);
+    if (shopIncome) log(`🧑‍🤝‍🧑 佣兵店务分红: +${shopIncome}G`, "gold");
+    if (wallRepair) log(`🔨 铁匠修复城墙: +${wallRepair}`, "success");
+  } else {
+    log("（本日已经结算，维护费不会重复扣除。）", "dim");
+  }
+  updateStatus();
+
+  renderButtons([
+    { text: "📈 升级店铺", action: tryUpgrade, type: "gold" },
+    { text: "🌅 开始新的一天 →", action: startNewDay, type: "success" }
+  ]);
+}
+
+// ===== 新的一天 =====
+function startNewDay() {
+  state.day++;
+  state.phase = "morning";
+  state.today = { revenue:0, expenses:0, customers:0, sales:0 };
+  state.dungeonCooldown = Math.max(0, state.dungeonCooldown - 1);
+  state.totalDays++;
+
+  // 每五天强制进入一场城防战，不能绕过。
+  if (state.day >= state.defense.nextDay) {
+    state.phase = "defense";
+    updateStatus();
+    showDefenseBriefing();
+    return;
+  }
+
+  clearLog();
+  log(`<b>🌅 第 ${state.day} 天开始了！</b>`, "highlight");
+  log("");
+  log(`💰 当前资金: ${state.gold}G`);
+  log(`📦 库存: ${state.inventory.length}件`);
+  log(`🏪 店铺: ${state.shopLevel}级 ${SHOP_LEVELS[state.shopLevel].name}`);
+  if (state.dungeonCooldown > 0) {
+    log(`⏳ 地下城冷却: ${state.dungeonCooldown}天`, "dim");
+  }
+  log("");
+
+  updateStatus();
+  renderButtons([
+    { text: "🌅 开始营业 →", action: showMainMenu, type: "success" }
+  ]);
+}
+
+// ===== 升级店铺 =====
+function tryUpgrade() {
+  clearLog();
+  const cfg = SHOP_LEVELS[state.shopLevel];
+
+  if (!cfg.next) {
+    log("<b>🏆 你已达到最高等级！</b>", "highlight");
+    log("你已经是商业之神了。");
+    renderButtons([{ text: "🔙 返回", action: showMainMenu }]);
+    return;
+  }
+
+  const nextCfg = SHOP_LEVELS[cfg.next];
+  log("<b>📈 升级店铺</b>", "highlight");
+  log("");
+  log(`当前: ${state.shopLevel}级 ${cfg.name}`);
+  log(`下一级: ${cfg.next}级 ${nextCfg.name}`);
+  log(`费用: <b>${cfg.cost}G</b>`);
+  log(`资金: ${state.gold}G`);
+  log("");
+  log(`升级效果:`);
+  log(`  货架容量: ${cfg.shelf} → ${nextCfg.shelf}`);
+  log(`  库存上限: ${cfg.inv} → ${nextCfg.inv}`);
+  log(`  每日维护: ${cfg.dailyCost} → ${nextCfg.dailyCost}G`);
+
+  if (state.gold >= cfg.cost) {
+    renderButtons([
+      { text: `✅ 确认升级 (${cfg.cost}G)`, action: doUpgrade, type: "success" },
+      { text: "🔙 算了", action: showMainMenu }
+    ]);
+  } else {
+    log("", "danger");
+    log(`❌ 资金不足！还需要 ${cfg.cost - state.gold}G`, "danger");
+    renderButtons([{ text: "🔙 返回", action: showMainMenu }]);
+  }
+}
+
+function doUpgrade() {
+  const cfg = SHOP_LEVELS[state.shopLevel];
+  state.gold -= cfg.cost;
+  state.shopLevel = cfg.next;
+
+  clearLog();
+  log("<b>🎉 店铺升级成功！</b>", "highlight");
+  log("");
+  log(`现在你是 <b>${state.shopLevel}级 ${SHOP_LEVELS[state.shopLevel].name}</b> 了！`);
+  log("");
+  log("解锁新内容:");
+  if (state.shopLevel === "E") {
+    log("  ✅ 更多顾客类型（老手冒险者）");
+    log("  ✅ 货架容量增加");
+    log("  ✅ 可以进入E级地下城");
+  } else if (state.shopLevel === "D") {
+    log("  ✅ 贵族顾客可能出现");
+    log("  ✅ 鉴定折扣");
+  }
+
+  updateStatus();
+  renderButtons([
+    { text: "🌅 开始新的一天", action: startNewDay, type: "success" }
+  ]);
+}
+
+// ===== 初始化 =====
+function init() {
+  const restored = restoreGame();
+  // 第一次游玩才给予初始物品；之后自动读取本机存档。
+  if (!restored) {
+    state.inventory.push({ ...ITEMS["F001"], key:"F001", acquiredPrice:5, isAppraised:false, listedPrice:0 });
+    state.inventory.push({ ...ITEMS["F003"], key:"F003", acquiredPrice:0, isAppraised:false, listedPrice:0 });
+    state.inventory.push({ ...ITEMS["F006"], key:"F006", acquiredPrice:8, isAppraised:false, listedPrice:0 });
+  }
+
+  gameBooted = true;
+  updateStatus();
+  showMainMenu();
+
+  log("<b>🎮 《F级地下城商人》网页版</b>", "highlight");
+  log(restored ? "📱 已读取此设备的本地存档。" : "你在F级地下城门口开了一家破烂店。", restored ? "success" : "");
+  log("专卖冒险者嫌弃的垃圾——但你知道，垃圾里藏着神器。");
+  log("那枚从小戴在身上的狮鹫吊坠，也许并不只是母亲留下的遗物。", "story");
+  log("");
+  log("💡 <b>新手提示:</b>");
+  log("1. 先去地下城拾荒（午休时）免费进货");
+  log("2. 鉴定物品，看是不是宝物");
+  log("3. 把值钱的摆上货架");
+  log("4. 接待顾客，高价卖出");
+  log("5. 积累资金，升级店铺！第 5 天起每隔 5 天会触发守城战");
+  log("6. 用初始的 2 张佣兵契约招人；佣兵会自动经营店铺并参加守城");
+  log("");
+}
+
+// 启动
+window.onload = init;
+</script>
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+  }
+</script>
+
+</body>
+</html>
