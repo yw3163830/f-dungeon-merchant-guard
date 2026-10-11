@@ -1,0 +1,40 @@
+{
+  "id": "./",
+  "name": "扩军 · 篮球总经理",
+  "short_name": "扩军 GM",
+  "description": "你的城市、你的球队。建立第 31 支球队，经营完整篮球生涯。",
+  "lang": "zh-CN",
+  "start_url": "./?source=homescreen",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "background_color": "#10181c",
+  "theme_color": "#11191d",
+  "categories": [
+    "games",
+    "sports"
+  ],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
